@@ -1,5 +1,34 @@
 # solid-js
 
+## 2.0.0-rc.22
+
+### Patch Changes
+
+- cf839ea: Context providers no longer create an owner of their own: the provided value now sits on the two memos that resolve the provider's children, so each provider allocates one node and one bound function fewer.
+- c50abb6: A `dynamic` mount of a live server component that switches arguments and comes back to its first call (a windowed view scrolling back to the slice the page was served with) shows that call again. The equals gate compared the incoming binding with the one the memo holds, which is the first resolution's, so the way back read as "nothing changed" and the mount stayed on the other address.
+
+  A live connection cancelled before its body's `start` arrived now reads as a death, and the loop reconnects. A remount replaying a warm store gives up on a row-op record by cancelling the new connection so the resume re-sends the hole whole; with nothing open yet, the end read as a completion and the mount was left with no live connection.
+
+- 32b4294: Fail renderToStream when the default serializer reports a synchronous error before the first flush, matching asynchronous failures. No HTML is sent, onCompleteAll is skipped, and createSSRResponse returns 500 when consuming the stream. An error an `<Errored>` contained does not fail the render when it cannot be serialized: its record and the rejection of its source, deferStream or streamed, are sent as a plain Error with its message, the fallback stays, and the error hook hears the failure once. A rejection nothing contained still fails the render.
+- c8c5eb1: Server rendering only treats nodes the runtime made as finished markup. `ssr()`, `ssrElement()` and the frames sink now stamp their nodes with the `Symbol.for("solid.ssrNode")` symbol (as `$`, a value no data can hold), and every insert position checks it instead of the object's shape. A plain object with a `t` key (or `t`, `h` and `p`), such as one parsed from JSON, is data: it renders nothing and gets the dev warning UNRECOGNIZED_INSERT_VALUE, like any other plain object. The async-memo landing check (ASYNC_MEMO_ELEMENT) uses the same brand, so such data now serializes like other data instead of being refused. Server only; no client bytes.
+- Updated dependencies [f6b6737]
+- Updated dependencies [2789ca9]
+- Updated dependencies [db3d13d]
+- Updated dependencies [5208944]
+- Updated dependencies [6b7474b]
+- Updated dependencies [da402ca]
+- Updated dependencies [79b6541]
+- Updated dependencies [45498e3]
+- Updated dependencies [1bdd973]
+- Updated dependencies [4fe7532]
+- Updated dependencies [78eaf88]
+- Updated dependencies [46a72c0]
+- Updated dependencies [fb672ca]
+- Updated dependencies [c981680]
+- Updated dependencies [eef34fd]
+- Updated dependencies [ebd6283]
+  - @solidjs/signals@2.0.0-rc.22
+
 ## 2.0.0-rc.21
 
 ### Patch Changes

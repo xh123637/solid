@@ -1,5 +1,26 @@
 # @solidjs/web
 
+## 2.0.0-rc.22
+
+### Patch Changes
+
+- 366c0eb: `renderToStream().pipe()` no longer throws `buffer.flush is not a function` when the render is abandoned from inside its first write (#4745). With a shell of 16384 characters or more, a pre-flush redirect in `createSSRResponse`, a sink whose `write` throws or a `signal` aborted from inside that write left `pipe` flushing a buffer that had no `flush`, and the unhandled rejection ended the process under Node's default handling.
+- 90d1a51: A viewer that joins a running `broadcast` is sent each live range once, as it shows now. Its snapshot used to carry the frame as it first rendered and then every changed hole whole again, so a late joiner downloaded a big live table twice (about 600 ms to join a 2,000-row table, now about 120 ms).
+- 8506dbf: fix(web): a `deferStream` source that rejects on the server hydrates as a rejection, so `reset()` refetches it on the client (#4747)
+- 54456c9: A live server component's attribute whose value is still pending at the top of the render (no `<Loading>` around it) no longer writes the live-hole comment markers inside the tag or the attribute value (`<div<!--lh:1--> style="…"<!--lh:/1-->>`), which broke the element. The element keeps its attribute address, and the binding registers once the tag's pending values resolve, so later values update the attribute as an `attr` op.
+- c50abb6: A `dynamic` mount of a live server component that switches arguments and comes back to its first call (a windowed view scrolling back to the slice the page was served with) shows that call again. The equals gate compared the incoming binding with the one the memo holds, which is the first resolution's, so the way back read as "nothing changed" and the mount stayed on the other address.
+
+  A live connection cancelled before its body's `start` arrived now reads as a death, and the loop reconnects. A remount replaying a warm store gives up on a row-op record by cancelling the new connection so the resume re-sends the hole whole; with nothing open yet, the end read as a completion and the mount was left with no live connection.
+
+- 32b4294: Fail renderToStream when the default serializer reports a synchronous error before the first flush, matching asynchronous failures. No HTML is sent, onCompleteAll is skipped, and createSSRResponse returns 500 when consuming the stream. An error an `<Errored>` contained does not fail the render when it cannot be serialized: its record and the rejection of its source, deferStream or streamed, are sent as a plain Error with its message, the fallback stays, and the error hook hears the failure once. A rejection nothing contained still fails the render.
+- c8c5eb1: Server rendering only treats nodes the runtime made as finished markup. `ssr()`, `ssrElement()` and the frames sink now stamp their nodes with the `Symbol.for("solid.ssrNode")` symbol (as `$`, a value no data can hold), and every insert position checks it instead of the object's shape. A plain object with a `t` key (or `t`, `h` and `p`), such as one parsed from JSON, is data: it renders nothing and gets the dev warning UNRECOGNIZED_INSERT_VALUE, like any other plain object. The async-memo landing check (ASYNC_MEMO_ELEMENT) uses the same brand, so such data now serializes like other data instead of being refused. Server only; no client bytes.
+- b3731b0: A text value that shares its parent with other children (`<p>Count: {n()}</p>`) no longer reads the text node's `.data` before each write. The node remembers the last value written and later updates compare against that, which takes a signal-driven text update from about 0.59 µs to about 0.35 µs. The first write to a node still compares with the DOM. One behavior difference: if something outside Solid rewrites such a text node and the value then re-evaluates to what Solid last wrote, the text is no longer written back.
+- Updated dependencies [cf839ea]
+- Updated dependencies [c50abb6]
+- Updated dependencies [32b4294]
+- Updated dependencies [c8c5eb1]
+  - solid-js@2.0.0-rc.22
+
 ## 2.0.0-rc.21
 
 ### Patch Changes
